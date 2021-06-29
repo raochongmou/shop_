@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    app跟组建
+    <router-view />
   </div>
 </template>
 
