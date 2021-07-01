@@ -84,9 +84,7 @@ export default {
     async getMenuList() {
       const { data: res } = await this.$http.get("menus")
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
-      this.$message.success(res.meta.msg)
       this.menusList = res.data
-      console.log(this.menusList)
     },
     // 点击三条竖线折叠侧边菜单栏
     taggleMenu(){
