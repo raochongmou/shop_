@@ -11,58 +11,24 @@
     <el-card>
       <el-row :gutter="20">
         <el-col :span="8">
-          <el-input
-            placeholder="请输入内容"
-            v-model="infoList.query"
-            clearable
-            @clear="getUserList"
-          >
-            <el-button
-              slot="append"
-              icon="el-icon-search"
-              @click="getUserList"
-            ></el-button>
+          <el-input placeholder="请输入内容" v-model="infoList.query" clearable @clear="getUserList">
+            <el-button slot="append" icon="el-icon-search" @click="getUserList"></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary" @click="addDialogVisible = true"
-            >添加用户</el-button
-          >
+          <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
         </el-col>
       </el-row>
       <!-- 用户列表表格 -->
       <el-table :data="userList" stripe border>
-        <el-table-column
-          label="#"
-          type="index"
-          align="center"
-        ></el-table-column>
-        <el-table-column
-          label="姓名"
-          prop="username"
-          align="center"
-        ></el-table-column>
-        <el-table-column
-          label="邮箱"
-          prop="email"
-          align="center"
-        ></el-table-column>
-        <el-table-column
-          label="手机号码"
-          prop="mobile"
-          align="center"
-        ></el-table-column>
-        <el-table-column
-          label="角色"
-          prop="role_name"
-          align="center"
-        ></el-table-column>
+        <el-table-column label="#" type="index" align="center"></el-table-column>
+        <el-table-column label="姓名" prop="username" align="center"></el-table-column>
+        <el-table-column label="邮箱" prop="email" align="center"></el-table-column>
+        <el-table-column label="手机号码" prop="mobile" align="center"></el-table-column>
+        <el-table-column label="角色" prop="role_name" align="center"></el-table-column>
         <el-table-column label="状态" prop="mg_state" align="center">
           <template slot-scope="scope">
-            <el-switch
-              @change="userStateChange(scope.row)"
-              v-model="scope.row.mg_state"
-            ></el-switch>
+            <el-switch @change="userStateChange(scope.row)" v-model="scope.row.mg_state"></el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180px">
@@ -70,25 +36,17 @@
             <el-button
               type="primary"
               icon="el-icon-edit"
+              @click="showEditDialog(scope.row.id)"
               size="mini"
             ></el-button>
             <el-button
               type="danger"
               icon="el-icon-delete"
+              @click="deleteUser(scope.row.id)"
               size="mini"
             ></el-button>
-            <el-tooltip
-              class="item"
-              effect="dark"
-              content="设置"
-              placement="top"
-              :enterable="false"
-            >
-              <el-button
-                type="warning"
-                icon="el-icon-setting"
-                size="mini"
-              ></el-button>
+            <el-tooltip class="item" effect="dark" content="设置" placement="top" :enterable="false">
+              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -102,38 +60,61 @@
         :page-size="infoList.pagesize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
-      >
-      </el-pagination>
+      ></el-pagination>
     </el-card>
-    <!--  对话框 -->
-    <el-dialog title="提示" :visible.sync="addDialogVisible" width="50%">
+    <!--  添加用户对话框 -->
+    <el-dialog title="添加用户" :visible.sync="addDialogVisible" @close="addDialogClose" width="50%">
       <!-- 表单 -->
       <el-form
-        :model="addRuleForm"
+        :model="addForm"
         :rules="addRules"
-        ref="addRuleFormRef"
+        ref="addFormRef"
         label-width="100px"
         class="demo-ruleForm"
       >
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="addRuleForm.username"></el-input>
+          <el-input v-model="addForm.username"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input v-model="addRuleForm.password"></el-input>
+          <el-input v-model="addForm.password"></el-input>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="addRuleForm.email"></el-input>
+          <el-input v-model="addForm.email"></el-input>
         </el-form-item>
         <el-form-item label="手机号码" prop="mobile">
-          <el-input v-model="addRuleForm.mobile"></el-input>
+          <el-input v-model="addForm.mobile"></el-input>
         </el-form-item>
       </el-form>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addDialogVisible = false"
-          >确 定</el-button
-        >
+        <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!--  修改用户对话框 -->
+    <el-dialog title="修改用户" :visible.sync="editDialogVisible" @close="editDialogClose" width="50%">
+      <!-- 表单 -->
+      <el-form
+        :model="editForm"
+        :rules="editRules"
+        ref="editFormRef"
+        label-width="100px"
+        class="demo-ruleForm"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="editForm.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号码" prop="mobile">
+          <el-input v-model="editForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editUser">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -167,31 +148,34 @@ export default {
       infoList: {
         query: "",
         pagesize: 2,
-        pagenum: 1,
+        pagenum: 1
       },
       userList: [],
       total: 0,
       addDialogVisible: false,
+      editDialogVisible: false,
       // 表单数据绑定
-      addRuleForm: {
+      addForm: {
         username: "",
         email: "",
         mobile: "",
-        password: "",
+        password: ""
       },
-      // 表单验证规则
+      // 存放修改时的表单对象(请求时)
+      editForm: {},
+      // 添加时的表单验证规则
       addRules: {
         username: [
           { required: true, message: "用户名不能为空!", trigger: "blur" },
-          { min: 3, max: 10, message: "请输入3-10字符", trigger: "blur" },
+          { min: 3, max: 10, message: "请输入3-10字符", trigger: "blur" }
         ],
         email: [
           { required: true, message: "邮箱不能为空!", trigger: "blur" },
-          { validator: emailValid, trigger: "blur" },
+          { validator: emailValid, trigger: "blur" }
         ],
         mobile: [
           { required: true, message: "手机号码不能为空!", trigger: "blur" },
-          { validator: mobileValid, trigger: "blur" },
+          { validator: mobileValid, trigger: "blur" }
         ],
         password: [
           { required: true, message: "密码不能为空!", trigger: "blur" },
@@ -199,16 +183,27 @@ export default {
             min: 6,
             max: 15,
             message: "密码长度为6-15位的数字",
-            trigger: "blur",
-          },
-        ],
+            trigger: "blur"
+          }
+        ]
       },
+      // 修改时的表单验证规则
+      editRules: {
+        email: [
+          { required: true, message: "邮箱不能为空!", trigger: "blur" },
+          { validator: emailValid, trigger: "blur" }
+        ],
+        mobile: [
+          { required: true, message: "手机号码不能为空!", trigger: "blur" },
+          { validator: mobileValid, trigger: "blur" }
+        ]
+      }
     }
   },
   methods: {
     async getUserList() {
       const { data: res } = await this.$http("users", {
-        params: this.infoList,
+        params: this.infoList
       })
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.userList = res.data.users
@@ -236,10 +231,69 @@ export default {
       }
       this.$message.success("更新用户状态成功!")
     },
+    // 添加用户--关闭对话框时重置表单验证
+    addDialogClose() {
+      this.$refs.addFormRef.resetFields()
+    },
+    // 修改用户--关闭对话框时重置表单验证
+    editDialogClose() {
+      this.$refs.editFormRef.resetFields()
+    },
+    // 修改对话框
+    async showEditDialog(id) {
+      this.editDialogVisible = true
+      const { data: res } = await this.$http.get("users/" + id)
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.editForm = res.data
+    },
+    // 添加按钮
+    addUser() {
+      this.$refs.addFormRef.validate(async val => {
+        if (!val) return this.$message.error("添加用户失败!")
+        const { data: res } = await this.$http.post("users", this.addForm)
+        if (res.meta.status !== 201) return this.$message.error("添加用户失败!")
+        // this.$message.success(res.meta.msg);
+        this.$message.success("添加用户成功!")
+        this.addDialogVisible = false
+        this.getUserList()
+      })
+    },
+    // 修改按钮
+    editUser() {
+      this.$refs.editFormRef.validate(async valid => {
+        if (!valid) return this.$message.error("修改操作失败!请输入正确的格式:")
+        const { data: res } = await this.$http.put(
+          "users/" + this.editForm.id,
+          {
+            mobile: this.editForm.mobile,
+            email: this.editForm.email
+          }
+        )
+        if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+        this.$message.success(res.meta.msg)
+        this.editDialogVisible = !this.editDialogVisible
+        // 关闭修改对话框后重新调用获取列表接口
+        this.getUserList()
+      })
+    },
+    // 删除按钮
+    async deleteUser(id) {
+       const confirmResults = await this.$comfirm("此操作将删除该用户!", "提示!", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).catch(err => err)
+      if(confirmResults !== 'confirm') return this.$message({type:'info',message:'已取消删除!'})
+      // 用户点击确认后 删除接口调用
+      const {data:res} = await this.$http.delete('users/' + id)
+      if(res.meta.status !== 200) return this.$message.error(res.meta,msg)
+      this.$message.success(res.meta.msg)
+      this.getUserList()
+    }
   },
   created() {
     this.getUserList()
-  },
+  }
 }
 </script>
 
