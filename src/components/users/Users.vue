@@ -46,7 +46,7 @@
               size="mini"
             ></el-button>
             <el-tooltip class="item" effect="dark" content="设置" placement="top" :enterable="false">
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button type="warning" @click="setUserRightBtn(scope.row)" icon="el-icon-setting" size="mini"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -117,6 +117,34 @@
         <el-button type="primary" @click="editUser">确 定</el-button>
       </span>
     </el-dialog>
+    <!--  分配用户权限对话框 -->
+    <el-dialog 
+    title="分配用户权限" 
+    :visible.sync="setUserDialogVisible" 
+    @close="setUserDialogClose" 
+    width="50%">
+      <el-row>
+        <el-col>
+          <p>当前的用户:{{userInfo.username}}</p>
+          <p>当前的角色:{{userInfo.role_name}}</p>
+          <p>分配所有角色:
+            <el-select v-model="selectData" placeholder="请选择">
+              <el-option 
+              v-for="item in rolesUserList"
+              :key="item.id"
+              :value="item.id"
+              :label="item.roleName">
+              </el-option>
+            </el-select>
+          </p>
+        </el-col>
+      </el-row>
+      
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setUserDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="setUser">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -151,9 +179,17 @@ export default {
         pagenum: 1
       },
       userList: [],
+      // 用户角色列表
+      rolesUserList: [],
+      // 分配所有用户列表绑定数组
+      selectData: "",
       total: 0,
       addDialogVisible: false,
       editDialogVisible: false,
+      // 设置用户权限对话框显隐藏
+      setUserDialogVisible:false,
+      // 用户权限数组
+      userInfo:[],
       // 表单数据绑定
       addForm: {
         username: "",
@@ -208,7 +244,6 @@ export default {
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.userList = res.data.users
       this.total = res.data.total
-      console.log(res.data)
     },
     handleSizeChange(newSize) {
       this.infoList.pagesize = newSize
@@ -220,7 +255,6 @@ export default {
     },
     // 点击switch按钮时动态改变状态
     async userStateChange(userInfo) {
-      console.log(userInfo)
       const { data: res } = await this.$http.put(
         `users/${userInfo.id}/state/${userInfo.mg_state}`
       )
@@ -246,7 +280,7 @@ export default {
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.editForm = res.data
     },
-    // 添加按钮
+    // 添加时确认按钮
     addUser() {
       this.$refs.addFormRef.validate(async val => {
         if (!val) return this.$message.error("添加用户失败!")
@@ -258,7 +292,7 @@ export default {
         this.getUserList()
       })
     },
-    // 修改按钮
+    // 修改时确认按钮
     editUser() {
       this.$refs.editFormRef.validate(async valid => {
         if (!valid) return this.$message.error("修改操作失败!请输入正确的格式:")
@@ -289,6 +323,32 @@ export default {
       if(res.meta.status !== 200) return this.$message.error(res.meta,msg)
       this.$message.success(res.meta.msg)
       this.getUserList()
+    },
+    // 触发设置按钮
+    async setUserRightBtn(userInfo) {
+      this.userInfo = userInfo
+      const {data:res} = await this.$http.get("roles")
+      this.rolesUserList = res.data
+      console.log(this.rolesUserList);
+      
+      this.setUserDialogVisible = true
+    },
+    // 分配用户角色对话框确定按钮
+    async setUser() {
+      if(!this.rolesUserList) {
+        return this.$message.error("请选择要分配的角色")
+      }
+      const {data:res} = await this.$http.put(`users/${this.userInfo.id}/role`,{
+        rid: this.rolesUserList
+      })
+      if(res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.$message.success("分配角色成功!")
+      this.setUserDialogVisible = false
+    },
+    // 关闭分配用户角色对话框触发事件
+    setUserDialogClose() {
+      this.rolesUserList = "",
+      this.userInfo = {}
     }
   },
   created() {
